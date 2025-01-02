@@ -28,6 +28,9 @@
     <div class="result" id="result"></div>
 
     <script>
+        // Initialize the Telegram Web App
+        Telegram.WebApp.ready();
+
         function calculateRewards() {
             const power = document.getElementById('powerInput').value;
             if (!power) {
@@ -40,8 +43,9 @@
         }
 
         // Handle data received from the bot backend
-        Telegram.WebApp.onEvent('mainButtonClicked', () => {
-            Telegram.WebApp.close();
+        Telegram.WebApp.onEvent('messageReceived', (data) => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = data;
         });
 
         // Expand the Mini App to full screen
