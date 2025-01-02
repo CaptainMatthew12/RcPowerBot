@@ -3,78 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Mini App</title>
+    <title>Power Income Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background-color: #fff;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-        input[type="number"] {
-            width: 100%;
+        input, button {
+            margin: 10px;
             padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            font-size: 16px;
         }
-        button {
-            background-color: #007bff;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Set Your Goal Power</h1>
-        <form id="powerForm">
-            <input type="number" id="goalPower" placeholder="Enter goal power in PH" required>
-            <button type="submit">Submit</button>
-        </form>
-        <p id="responseMessage"></p>
-    </div>
+    <h1>Power Income Calculator</h1>
+    <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
+    <button onclick="calculateIncome()">Calculate</button>
+    <div class="result" id="result"></div>
 
     <script>
-        document.getElementById('powerForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const goalPower = document.getElementById('goalPower').value;
-            const chatId = '1744622159'; // Replace with your chat ID or dynamically fetch it
+        function calculateIncome() {
+            const power = document.getElementById('powerInput').value;
+            if (!power) {
+                alert('Please enter your power.');
+                return;
+            }
 
-            fetch(`https://api.telegram.org/bot7738038338:AAEl_2QqTbbUg_e9wASCVxU_Ykc93K3fOVI/sendMessage`, {
+            // Replace with your local server URL
+            const serverUrl = 'http://localhost:5000/calculate';
+
+            fetch(serverUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: `/power ${goalPower}`
-                })
+                body: JSON.stringify({ power: power }),
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('responseMessage').innerText = 'Power goal submitted successfully!';
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<strong>Daily Rewards:</strong><br>${data.message.replace(/\n/g, '<br>')}`;
             })
             .catch(error => {
-                document.getElementById('responseMessage').innerText = 'Error submitting power goal.';
+                console.error('Error:', error);
+                alert('An error occurred while calculating the income.');
             });
-        });
+        }
     </script>
 </body>
 </html>
