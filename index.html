@@ -43,17 +43,25 @@
             return expectedRewardPerBlock * blocksPerDay;
         }
 
-        // Function to fetch crypto prices from an API
+        // Function to fetch crypto prices from an API using a CORS proxy
         async function fetchCryptoPrices() {
             const prices = {};
             const coins = ['btc', 'eth', 'bnb', 'matic', 'sol', 'trx', 'ltc'];
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
             for (const coin of coins) {
-                const response = await fetch(`https://api.nobitex.ir/market/stats?srcCurrency=${coin}&dstCurrency=usdt`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'ok') {
-                        prices[coin] = parseFloat(data.stats[`${coin}-usdt`].latest);
+                const apiUrl = `https://api.nobitex.ir/market/stats?srcCurrency=${coin}&dstCurrency=usdt`;
+                try {
+                    const response = await fetch(`${proxyUrl}${apiUrl}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.status === 'ok') {
+                            prices[coin] = parseFloat(data.stats[`${coin}-usdt`].latest);
+                        }
+                    } else {
+                        console.error(`Error fetching data for ${coin}:`, response.statusText);
                     }
+                } catch (error) {
+                    console.error(`Fetch error for ${coin}:`, error);
                 }
             }
             return prices;
@@ -68,37 +76,42 @@
             }
 
             const blockTimer = 10;
-            const cryptoPrices = await fetchCryptoPrices();
-            let resultText = `Daily Reward for Power: ${goalPower.toFixed(2)} PH\n\n`;
+            try {
+                const cryptoPrices = await fetchCryptoPrices();
+                let resultText = `Daily Reward for Power: ${goalPower.toFixed(2)} PH\n\n`;
 
-            // Prepare arrays for native and other coins
-            const nativeCoins = ['RLT', 'RST'];
-            const otherCoins = ['xrp', 'doge', 'btc', 'eth', 'bnb', 'matic', 'sol', 'trx', 'ltc'];
+                // Prepare arrays for native and other coins
+                const nativeCoins = ['RLT', 'RST'];
+                const otherCoins = ['xrp', 'doge', 'btc', 'eth', 'bnb', 'matic', 'sol', 'trx', 'ltc'];
 
-            // Calculate and format native tokens rewards
-            let nativeRewards = [];
-            for (const coin of nativeCoins) {
-                const networkPower = networkPowers[coin];
-                const blockReward = blockRewards[coin];
-                const dailyReward = calculateDailyReward(networkPower, goalPower, blockReward, blockTimer);
-                nativeRewards.push(`${coin}: ${dailyReward.toFixed(3)} ${coin}`);
+                // Calculate and format native tokens rewards
+                let nativeRewards = [];
+                for (const coin of nativeCoins) {
+                    const networkPower = networkPowers[coin];
+                    const blockReward = blockRewards[coin];
+                    const dailyReward = calculateDailyReward(networkPower, goalPower, blockReward, blockTimer);
+                    nativeRewards.push(`${coin}: ${dailyReward.toFixed(3)} ${coin}`);
+                }
+                resultText += `Native Tokens:\n${nativeRewards.join(' | ')}\n\n`;
+
+                // Calculate and format other cryptocurrencies rewards
+                let otherRewards = [];
+                for (const coin of otherCoins) {
+                    const networkPower = networkPowers[coin.toUpperCase()];
+                    const blockReward = blockRewards[coin];
+                    const dailyReward = calculateDailyReward(networkPower, goalPower, blockReward, blockTimer);
+                    const price = cryptoPrices[coin] || 0;
+                    const dailyRewardUSD = dailyReward * price;
+                    otherRewards.push(`${coin.toUpperCase()}: ${dailyRewardUSD.toFixed(3)} USD`);
+                }
+                resultText += `Other Cryptocurrencies:\n${otherRewards.join('\n')}`;
+
+                // Display the result
+                document.getElementById('result').innerText = resultText;
+            } catch (error) {
+                console.error('Error calculating rewards:', error);
+                alert('An error occurred while calculating rewards. Please try again later.');
             }
-            resultText += `Native Tokens:\n${nativeRewards.join(' | ')}\n\n`;
-
-            // Calculate and format other cryptocurrencies rewards
-            let otherRewards = [];
-            for (const coin of otherCoins) {
-                const networkPower = networkPowers[coin.toUpperCase()];
-                const blockReward = blockRewards[coin];
-                const dailyReward = calculateDailyReward(networkPower, goalPower, blockReward, blockTimer);
-                const price = cryptoPrices[coin] || 0;
-                const dailyRewardUSD = dailyReward * price;
-                otherRewards.push(`${coin.toUpperCase()}: ${dailyRewardUSD.toFixed(3)} USD`);
-            }
-            resultText += `Other Cryptocurrencies:\n${otherRewards.join('\n')}`;
-
-            // Display the result
-            document.getElementById('result').innerText = resultText;
         }
     </script>
 </body>
