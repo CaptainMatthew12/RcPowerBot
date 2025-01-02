@@ -1,42 +1,105 @@
-<script>
-    // Check if the Telegram object is available
-    if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
-        // Initialize the Telegram Web App
-        Telegram.WebApp.ready();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blocky Rewards Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blocky Rewards Calculator</h1>
+    <label for="powerInput">Enter Power (PH):</label>
+    <input type="number" id="powerInput" step="0.01" required>
+    <button onclick="calculateRewards()">Calculate Rewards</button>
+    <div id="result"></div>
 
-        function calculateRewards() {
-            const power = document.getElementById('powerInput').value;
-            if (!power) {
-                alert("Please enter your power.");
+    <script>
+        // Define block rewards and network powers
+        const blockRewards = {
+            'RLT': 30, 'RST': 250, 'xrp': 12, 'doge': 51, 'btc': 0.0002, 'eth': 0.0045,
+            'bnb': 0.03, 'matic': 35, 'sol': 0.11, 'trx': 75, 'ltc': 0.3
+        };
+
+        const networkPowers = {
+            'RLT': 300, 'RST': 2500, 'XRP': 1200, 'DOGE': 5100, 'BTC': 200, 'ETH': 450,
+            'BNB': 300, 'MATIC': 3500, 'SOL': 110, 'TRX': 7500, 'LTC': 300
+        };
+
+        // Function to calculate daily reward
+        function calculateDailyReward(networkPower, goalPower, blockReward, blockTimer) {
+            const goalPowerEH = goalPower / 1000;
+            const relativePowerRatio = goalPowerEH / networkPower;
+            const expectedRewardPerBlock = relativePowerRatio * blockReward;
+            const blocksPerDay = 24 * (60 / blockTimer);
+            return expectedRewardPerBlock * blocksPerDay;
+        }
+
+        // Function to fetch crypto prices from an API
+        async function fetchCryptoPrices() {
+            const prices = {};
+            const coins = ['btc', 'eth', 'bnb', 'matic', 'sol', 'trx', 'ltc'];
+            for (const coin of coins) {
+                const response = await fetch(`https://api.nobitex.ir/market/stats?srcCurrency=${coin}&dstCurrency=usdt`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'ok') {
+                        prices[coin] = parseFloat(data.stats[`${coin}-usdt`].latest);
+                    }
+                }
+            }
+            return prices;
+        }
+
+        // Main function to calculate and display rewards
+        async function calculateRewards() {
+            const goalPower = parseFloat(document.getElementById('powerInput').value);
+            if (isNaN(goalPower)) {
+                alert('Please enter a valid power value.');
                 return;
             }
 
-            // Send data to the bot backend
-            Telegram.WebApp.sendData(JSON.stringify({ power: power }));
-        }
+            const blockTimer = 10;
+            const cryptoPrices = await fetchCryptoPrices();
+            let resultText = `Daily Reward for Power: ${goalPower.toFixed(2)} PH\n\n`;
 
-        // Handle data received from the bot backend
-        Telegram.WebApp.onEvent('messageReceived', (data) => {
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = data;
-        });
+            // Prepare arrays for native and other coins
+            const nativeCoins = ['RLT', 'RST'];
+            const otherCoins = ['xrp', 'doge', 'btc', 'eth', 'bnb', 'matic', 'sol', 'trx', 'ltc'];
 
-        // Expand the Mini App to full screen
-        Telegram.WebApp.expand();
-    } else {
-        // Fallback for testing outside Telegram
-        console.warn("Telegram.WebApp is not available. Running in a non-Telegram environment.");
-
-        function calculateRewards() {
-            const power = document.getElementById('powerInput').value;
-            if (!power) {
-                alert("Please enter your power.");
-                return;
+            // Calculate and format native tokens rewards
+            let nativeRewards = [];
+            for (const coin of nativeCoins) {
+                const networkPower = networkPowers[coin];
+                const blockReward = blockRewards[coin];
+                const dailyReward = calculateDailyReward(networkPower, goalPower, blockReward, blockTimer);
+                nativeRewards.push(`${coin}: ${dailyReward.toFixed(3)} ${coin}`);
             }
+            resultText += `Native Tokens:\n${nativeRewards.join(' | ')}\n\n`;
 
-            // Simulate sending data (for testing purposes)
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = `Simulated result for power: ${power} PH/s`;
+            // Calculate and format other cryptocurrencies rewards
+            let otherRewards = [];
+            for (const coin of otherCoins) {
+                const networkPower = networkPowers[coin.toUpperCase()];
+                const blockReward = blockRewards[coin];
+                const dailyReward = calculateDailyReward(networkPower, goalPower, blockReward, blockTimer);
+                const price = cryptoPrices[coin] || 0;
+                const dailyRewardUSD = dailyReward * price;
+                otherRewards.push(`${coin.toUpperCase()}: ${dailyRewardUSD.toFixed(3)} USD`);
+            }
+            resultText += `Other Cryptocurrencies:\n${otherRewards.join('\n')}`;
+
+            // Display the result
+            document.getElementById('result').innerText = resultText;
         }
-    }
-</script>
+    </script>
+</body>
+</html>
