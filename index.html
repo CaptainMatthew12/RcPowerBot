@@ -1,33 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Rewards Calculator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        input, button {
-            padding: 10px;
-            margin: 5px 0;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .result {
-            margin-top: 20px;
-            white-space: pre-wrap;
-        }
-    </style>
-</head>
-<body>
-    <h1>Crypto Rewards Calculator</h1>
-    <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
-    <button onclick="calculateRewards()">Calculate</button>
-    <div class="result" id="result"></div>
-
-    <script>
+<script>
+    // Check if the Telegram object is available
+    if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
         // Initialize the Telegram Web App
         Telegram.WebApp.ready();
 
@@ -50,6 +23,20 @@
 
         // Expand the Mini App to full screen
         Telegram.WebApp.expand();
-    </script>
-</body>
-</html>
+    } else {
+        // Fallback for testing outside Telegram
+        console.warn("Telegram.WebApp is not available. Running in a non-Telegram environment.");
+
+        function calculateRewards() {
+            const power = document.getElementById('powerInput').value;
+            if (!power) {
+                alert("Please enter your power.");
+                return;
+            }
+
+            // Simulate sending data (for testing purposes)
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = `Simulated result for power: ${power} PH/s`;
+        }
+    }
+</script>
