@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Rewards Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crypto Rewards Calculator</h1>
+    <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
+    <button onclick="calculateRewards()">Calculate</button>
+    <div class="result" id="result"></div>
+
+    <script>
+        function calculateRewards() {
+            const power = document.getElementById('powerInput').value;
+            if (!power) {
+                alert("Please enter your power.");
+                return;
+            }
+
+            // Send data to the bot backend
+            Telegram.WebApp.sendData(JSON.stringify({ power: power }));
+        }
+
+        // Handle data received from the bot backend
+        Telegram.WebApp.onEvent('mainButtonClicked', () => {
+            Telegram.WebApp.close();
+        });
+
+        // Expand the Mini App to full screen
+        Telegram.WebApp.expand();
+    </script>
+</body>
+</html>
