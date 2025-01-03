@@ -1,8 +1,8 @@
-// Initialize Adsgram AdController in debug mode
+// Initialize Adsgram AdController
 const AdController = window.Adsgram.init({
-    blockId: "int-6763", // Placeholder block ID
-    debug: true, // Enable debug mode
-    debugBannerType: "RewardedVideo" // Test ad type
+    blockId: "int-6763", // Replace with your actual block ID
+    debug: true, // Set to false in production
+    debugBannerType: "FullscreenMedia" // Use "RewardedVideo" if needed
   });
   
   // Function to show the ad
