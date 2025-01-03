@@ -2,7 +2,7 @@
 const AdController = window.Adsgram.init({
     blockId: "123", // Placeholder block ID
     debug: true, // Enable debug mode
-    debugBannerType: "FullscreenMedia" // Test ad type
+    debugBannerType: "RewardedVideo" // Test ad type
   });
   
   // Function to show the ad
