@@ -1,6 +1,6 @@
 // Initialize Adsgram AdController
 const AdController = window.Adsgram.init({
-    blockId: "6763", // Replace with your actual block ID
+    blockId: "123", // Replace with your actual block ID
     debug: true, // Set to false in production
     debugBannerType: "FullscreenMedia" // Use "RewardedVideo" if needed
   });
