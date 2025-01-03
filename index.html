@@ -81,9 +81,11 @@
                 const rewards = data.message.split('\n');
                 rewards.forEach(reward => {
                     const row = resultTableBody.insertRow();
-                    const [timePeriod, rewardValue] = reward.split(':');
-                    row.insertCell(0).innerText = timePeriod.trim();
-                    row.insertCell(1).innerText = rewardValue.trim();
+                    const [timePeriod, rewardValue] = reward.split(':').map(item => item.trim());
+                    if (timePeriod && rewardValue) {
+                        row.insertCell(0).innerText = timePeriod;
+                        row.insertCell(1).innerText = rewardValue;
+                    }
                 });
             })
             .catch(error => {
