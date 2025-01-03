@@ -22,38 +22,13 @@
             margin-top: 20px;
             font-size: 18px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
     </style>
 </head>
 <body>
     <h1>Power Income Calculator</h1>
     <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
     <button onclick="calculateIncome()">Calculate</button>
-    <div class="result" id="result">
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th>Time Period</th>
-                    <th>Reward</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Results will be inserted here -->
-            </tbody>
-        </table>
-    </div>
+    <div class="result" id="result"></div>
 
     <script>
         function calculateIncome() {
@@ -75,18 +50,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                const resultTableBody = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
-                resultTableBody.innerHTML = ''; // Clear previous results
-
-                const rewards = data.message.split('\n');
-                rewards.forEach(reward => {
-                    const row = resultTableBody.insertRow();
-                    const [timePeriod, rewardValue] = reward.split(':').map(item => item.trim());
-                    if (timePeriod && rewardValue) {
-                        row.insertCell(0).innerText = timePeriod;
-                        row.insertCell(1).innerText = rewardValue;
-                    }
-                });
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<strong>Daily Rewards:</strong><br>${data.message.replace(/\n/g, '<br>')}`;
             })
             .catch(error => {
                 console.error('Error:', error);
