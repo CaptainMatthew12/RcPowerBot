@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Income Calculator</title>
+    <title>RollerCoin Calculator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <script src="ads.js"></script> <!-- Include the ads.js file -->
@@ -12,15 +12,39 @@
             font-family: Arial, sans-serif;
             padding: 20px;
             text-align: center;
+            background: linear-gradient(to right, #ff7e5f, #feb47b); /* Add gradient background */
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #fff; /* Change header color */
         }
         input, button {
             margin: 10px;
             padding: 10px;
             font-size: 16px;
+            border-radius: 10px; /* Add border-radius for curved corners */
+            border: none; /* Remove border */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
+        }
+        input {
+            width: calc(100% - 40px); /* Make input full width */
+            max-width: 400px; /* Limit max width */
+        }
+        button {
+            background-color: #ff7e5f; /* Button background color */
+            color: #fff; /* Button text color */
+            cursor: pointer;
+            transition: background-color 0.3s; /* Smooth transition */
+        }
+        button:hover {
+            background-color: #feb47b; /* Change color on hover */
         }
         .result {
             margin-top: 20px;
             font-size: 18px;
+            color: #fff; /* Change result text color */
         }
         .loading {
             display: none;
@@ -32,14 +56,19 @@
             width: 100%;
             margin-top: 20px;
             border-collapse: collapse;
+            border-radius: 10px; /* Add border-radius for curved corners */
+            overflow: hidden; /* Ensure the border-radius is applied to the table */
+            background: rgba(255, 255, 255, 0.2); /* Semi-transparent background for glass effect */
+            backdrop-filter: blur(10px); /* Blur effect for glass effect */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
         }
         th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
+            padding: 10px; /* Increase padding */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Semi-transparent border */
             text-align: left;
         }
         th {
-            background-color: #f2f2f2;
+            background: rgba(255, 255, 255, 0.3); /* Semi-transparent background for header */
         }
     </style>
     <style>
@@ -56,24 +85,24 @@
     </style>
 </head>
 <body>
-    <h1>Power Income Calculator</h1>
+    <h1>RollerCoin Calculator</h1>
     <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
     <button onclick="calculateIncome()">Calculate</button>
     <div class="result" id="result">
-        <strong>Daily Rewards:</strong>
+        <strong>Daily Income</strong>
         <table>
             <tr><th>Currency</th><th>Amount</th></tr>
-            <tr><td>RLT</td><td>0</td></tr>
-            <tr><td>RST</td><td>0</td></tr>
-            <tr><td>XRP</td><td>0</td></tr>
-            <tr><td>DOGE</td><td>0</td></tr>
-            <tr><td>BTC</td><td>0</td></tr>
-            <tr><td>ETH</td><td>0</td></tr>
-            <tr><td>BNB</td><td>0</td></tr>
-            <tr><td>MATIC</td><td>0</td></tr>
-            <tr><td>SOL</td><td>0</td></tr>
-            <tr><td>TRX</td><td>0</td></tr>
-            <tr><td>LTC</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/rlt.svg" width="16" height="16" alt="RLT"> RLT</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/rst.svg" width="16" height="16" alt="RST"> RST</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/xrp.svg" width="16" height="16" alt="XRP"> XRP</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/doge.svg" width="16" height="16" alt="DOGE"> DOGE</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/btc.svg" width="16" height="16" alt="BTC"> BTC</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/eth.svg" width="16" height="16" alt="ETH"> ETH</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/bnb.svg" width="16" height="16" alt="BNB"> BNB</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/matic.svg" width="16" height="16" alt="MATIC"> MATIC</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/sol.svg" width="16" height="16" alt="SOL"> SOL</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/trx.svg" width="16" height="16" alt="TRX"> TRX</td><td>0</td></tr>
+            <tr><td><img src="Coin Icon/ltc.svg" width="16" height="16" alt="LTC"> LTC</td><td>0</td></tr>
         </table>
     </div>
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
@@ -113,12 +142,12 @@
             .then(response => response.json())
             .then(data => {
                 const rewards = data.message.split('\n').map(line => line.split(': '));
-                let tableHTML = '<table><tr><th>Currency</th><th>Amount</th></tr>';
-                rewards.forEach(reward => {
-                    tableHTML += `<tr><td>${reward[0]}</td><td>${reward[1]}</td></tr>`;
+                rewards.forEach((reward, index) => {
+                    const row = rows[index + 1]; // Skip the header row
+                    const amountCell = row.cells[1];
+                    amountCell.classList.remove('loading-amount');
+                    amountCell.innerHTML = reward[1];
                 });
-                tableHTML += '</table>';
-                resultDiv.innerHTML = `<strong>Daily Rewards:</strong><br>${tableHTML}`;
             })
             .catch(error => {
                 console.error('Error:', error);
