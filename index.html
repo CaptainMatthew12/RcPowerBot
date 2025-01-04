@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RollerCoin Calculator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <script src="ads.js"></script> <!-- Include the ads.js file -->
+    <!-- <script src="https://sad.adsgram.ai/js/sad.min.js"></script> -->
+    <!-- <script src="ads.js"></script> --> <!-- Include the ads.js file -->
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,7 +37,18 @@
             background-color: #ff7e5f; /* Button background color */
             color: #fff; /* Button text color */
             cursor: pointer;
-            transition: background-color 0.3s; /* Smooth transition */
+            transition: background-color 0.3s, transform 0.1s; /* Smooth transition */
+            border: 2px solid #fff; /* Add border */
+            border-radius: 5px; /* Slightly rounded corners */
+            width: 100px; /* Fixed width */
+            height: 50px; /* Fixed height */
+            font-weight: bold; /* Bold text */
+            box-shadow: 0 4px #666; /* Shadow to give a 3D effect */
+        }
+        button:active {
+            background-color: #feb47b; /* Change color on click */
+            box-shadow: 0 2px #666; /* Reduce shadow on click */
+            transform: translateY(2px); /* Move button down on click */
         }
         button:hover {
             background-color: #feb47b; /* Change color on hover */
@@ -92,17 +104,17 @@
         <strong>Daily Income</strong>
         <table>
             <tr><th>Currency</th><th>Amount</th></tr>
-            <tr><td><img src="Coin Icon/rlt.svg" width="16" height="16" alt="RLT"> RLT</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/rst.svg" width="16" height="16" alt="RST"> RST</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/xrp.svg" width="16" height="16" alt="XRP"> XRP</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/doge.svg" width="16" height="16" alt="DOGE"> DOGE</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/btc.svg" width="16" height="16" alt="BTC"> BTC</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/eth.svg" width="16" height="16" alt="ETH"> ETH</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/bnb.svg" width="16" height="16" alt="BNB"> BNB</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/matic.svg" width="16" height="16" alt="MATIC"> MATIC</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/sol.svg" width="16" height="16" alt="SOL"> SOL</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/trx.svg" width="16" height="16" alt="TRX"> TRX</td><td>0</td></tr>
-            <tr><td><img src="Coin Icon/ltc.svg" width="16" height="16" alt="LTC"> LTC</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/rlt.svg" width="16" height="16" alt="RLT"> RLT</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/rst.svg" width="16" height="16" alt="RST"> RST</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/xrp.svg" width="16" height="16" alt="XRP"> XRP</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/doge.svg" width="16" height="16" alt="DOGE"> DOGE</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/btc.svg" width="16" height="16" alt="BTC"> BTC</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/eth.svg" width="16" height="16" alt="ETH"> ETH</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/bnb.svg" width="16" height="16" alt="BNB"> BNB</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/matic.svg" width="16" height="16" alt="MATIC"> MATIC</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/sol.svg" width="16" height="16" alt="SOL"> SOL</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/trx.svg" width="16" height="16" alt="TRX"> TRX</td><td>0</td></tr>
+            <tr><td><img src="Coin_Icon/ltc.svg" width="16" height="16" alt="LTC"> LTC</td><td>0</td></tr>
         </table>
     </div>
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
