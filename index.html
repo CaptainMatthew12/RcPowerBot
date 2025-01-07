@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RollerCoin Calculator</title>
-
+    <!-- <script src="https://telegram.org/js/telegram-web-app.js"></script> -->
+    <!-- <script src="https://sad.adsgram.ai/js/sad.min.js"></script> -->
+    <!-- <script src="ads.js"></script> --> <!-- Include the ads.js file -->
 
     <style>
         body {
@@ -76,9 +78,14 @@
             padding: 10px; /* Increase padding */
             border: 1px solid rgba(255, 255, 255, 0.3); /* Semi-transparent border */
             text-align: left;
+            width: 50%; /* Set a fixed width for table cells */
         }
         th {
             background: rgba(255, 255, 255, 0.3); /* Semi-transparent background for header */
+        }
+        .disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
     </style>
     <style>
@@ -97,7 +104,7 @@
 <body>
     <h1>RollerCoin Calculator</h1>
     <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
-    <button onclick="calculateIncome()">Calculate</button>
+    <button id="calculateButton" onclick="calculateIncome()">Calculate</button>
     <div class="result" id="result">
         <strong>Daily Income</strong>
         <table>
@@ -117,6 +124,7 @@
     </div>
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
 
+    <script src="ads.js"></script> <!-- Include the ads.js file -->
     <script>
         function calculateIncome() {
             const power = document.getElementById('powerInput').value;
@@ -124,6 +132,14 @@
                 alert('Please enter your power.');
                 return;
             }
+
+            const calculateButton = document.getElementById('calculateButton');
+            calculateButton.disabled = true;
+            calculateButton.classList.add('disabled');
+            setTimeout(() => {
+                calculateButton.disabled = false;
+                calculateButton.classList.remove('disabled');
+            }, 600000); // 10 minutes in milliseconds
 
             const loadingDiv = document.getElementById('loading');
             const resultDiv = document.getElementById('result');
@@ -164,6 +180,23 @@
                 alert('An error occurred while calculating the income.');
             });
         }
+
+        function resetTimer() {
+            const calculateButton = document.getElementById('calculateButton');
+            calculateButton.disabled = false;
+            calculateButton.classList.remove('disabled');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const calculateButton = document.getElementById('calculateButton');
+            calculateButton.addEventListener('click', () => {
+                showAd(); // Show the ad when the calculate button is clicked
+            });
+        });
+
+        AdController.addEventListener('onReward', () => {
+            resetTimer(); // Reset the timer when the user watches the ad till the end
+        });
     </script>
 </body>
 </html>
