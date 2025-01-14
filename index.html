@@ -40,8 +40,9 @@
             transition: background-color 0.3s, transform 0.1s; /* Smooth transition */
             border: 2px solid #fff; /* Add border */
             border-radius: 5px; /* Slightly rounded corners */
-            width: 100px; /* Fixed width */
-            height: 50px; /* Fixed height */
+            width: auto; /* Adjust width to fit text */
+            height: auto; /* Adjust height to fit text */
+            padding: 10px 20px; /* Adjust padding */
             font-weight: bold; /* Bold text */
             box-shadow: 0 4px #666; /* Shadow to give a 3D effect */
         }
@@ -83,9 +84,103 @@
         th {
             background: rgba(255, 255, 255, 0.3); /* Semi-transparent background for header */
         }
-        .disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        .progress-bar-container {
+            width: 100%;
+            max-width: 400px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #00ff00, #006400);
+            width: 100%;
+            transition: width 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            animation: charging 1s infinite;
+        }
+        .progress-bar.no-charging::before {
+            display: none;
+        }
+        @keyframes charging {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+            z-index: 1000; /* Ensure it overlays all elements */
+            text-align: center;
+            padding-top: 20%;
+        }
+        .panel-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            position: absolute; /* Change to absolute positioning */
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%); /* Adjust position to be exactly in the center */
+        }
+        .panel h2 {
+            margin-bottom: 20px;
+        }
+        .panel button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            background-color: #ff7e5f; /* Add background color */
+            color: #fff; /* Add text color */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
+            transition: background-color 0.3s, transform 0.1s; /* Smooth transition */
+            width: auto; /* Adjust width to fit text */
+            height: auto; /* Adjust height to fit text */
+            padding: 10px 20px; /* Adjust padding */
+        }
+        .panel button:active {
+            background-color: #feb47b; /* Change color on click */
+            box-shadow: 0 2px #666; /* Reduce shadow on click */
+            transform: translateY(2px); /* Move button down on click */
+        }
+        .panel button:hover {
+            background-color: #feb47b; /* Change color on hover */
+        }
+        .panel-content button {
+            display: block; /* Stack buttons vertically */
+            width: 100%; /* Full width */
+            margin: 10px 0; /* Vertical margin */
+        }
+        body.no-scroll {
+            overflow: hidden; /* Disable scrolling */
+        }
+        body.no-click {
+            pointer-events: none; /* Disable clicking */
+        }
+        body.no-click .panel {
+            pointer-events: auto; /* Enable clicking on the panel */
         }
     </style>
     <style>
@@ -104,7 +199,17 @@
 <body>
     <h1>RollerCoin Calculator</h1>
     <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
-    <button id="calculateButton" onclick="calculateIncome()">Calculate</button>
+    <button onclick="calculateIncome()">Calculate</button>
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="panel" id="noBatteriesPanel">
+        <div class="panel-content">
+            <h2>No more batteries</h2>
+            <button onclick="getFreeBatteries()">Get free 3 batteries</button>
+            <button onclick="closePanel()">Close</button>
+        </div>
+    </div>
     <div class="result" id="result">
         <strong>Daily Income</strong>
         <table>
@@ -124,22 +229,37 @@
     </div>
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
 
-    <script src="ads.js"></script> <!-- Include the ads.js file -->
     <script>
+        let charges = 3;
+
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progressBar');
+            const percentage = (charges / 3) * 100;
+            progressBar.style.width = `${percentage}%`;
+            if (charges <= 0) {
+                progressBar.style.background = 'linear-gradient(to right, #555, #000)';
+                progressBar.classList.add('no-charging');
+            } else {
+                progressBar.style.background = 'linear-gradient(to right, #00ff00, #006400)';
+                progressBar.classList.remove('no-charging');
+            }
+        }
+
         function calculateIncome() {
+            if (charges <= 0) {
+                document.getElementById('noBatteriesPanel').style.display = 'block';
+                document.body.classList.add('no-scroll', 'no-click'); // Disable scrolling and clicking
+                return;
+            }
+
             const power = document.getElementById('powerInput').value;
             if (!power) {
                 alert('Please enter your power.');
                 return;
             }
 
-            const calculateButton = document.getElementById('calculateButton');
-            calculateButton.disabled = true;
-            calculateButton.classList.add('disabled');
-            setTimeout(() => {
-                calculateButton.disabled = false;
-                calculateButton.classList.remove('disabled');
-            }, 600000); // 10 minutes in milliseconds
+            const calculateButton = document.querySelector('button[onclick="calculateIncome()"]');
+            calculateButton.disabled = true; // Disable the button
 
             const loadingDiv = document.getElementById('loading');
             const resultDiv = document.getElementById('result');
@@ -174,29 +294,30 @@
                     amountCell.classList.remove('loading-amount');
                     amountCell.innerHTML = reward[1];
                 });
+
+                charges--;
+                updateProgressBar();
+                calculateButton.disabled = false; // Re-enable the button
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while calculating the income.');
+                calculateButton.disabled = false; // Re-enable the button in case of error
             });
         }
 
-        function resetTimer() {
-            const calculateButton = document.getElementById('calculateButton');
-            calculateButton.disabled = false;
-            calculateButton.classList.remove('disabled');
+        function getFreeBatteries() {
+            charges = 3;
+            updateProgressBar();
+            closePanel();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const calculateButton = document.getElementById('calculateButton');
-            calculateButton.addEventListener('click', () => {
-                showAd(); // Show the ad when the calculate button is clicked
-            });
-        });
+        function closePanel() {
+            document.getElementById('noBatteriesPanel').style.display = 'none';
+            document.body.classList.remove('no-scroll', 'no-click'); // Re-enable scrolling and clicking
+        }
 
-        AdController.addEventListener('onReward', () => {
-            resetTimer(); // Reset the timer when the user watches the ad till the end
-        });
+        updateProgressBar();
     </script>
 </body>
 </html>
