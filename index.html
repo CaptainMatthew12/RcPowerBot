@@ -238,32 +238,7 @@
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
 
     <script>
-        let charges = 3;
-        let currentUserId = null;
-
-        // Add this function to update charges in the database
-        async function updateChargesInDB(newCharges) {
-            if (!currentUserId) return;
-            
-            try {
-                const response = await fetch('http://127.0.0.1:5000/update_charges', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: currentUserId,
-                        charges: newCharges
-                    }),
-                });
-                const data = await response.json();
-                if (!data.success) {
-                    console.error('Failed to update charges');
-                }
-            } catch (error) {
-                console.error('Error updating charges:', error);
-            }
-        }
+        let charges = 0; // Initialize to 0, will be updated from server
 
         function updateProgressBar() {
             const progressBar = document.getElementById('progressBar');
@@ -301,10 +276,6 @@
                     document.body.innerHTML = '<h1>Unauthorized Access</h1>';
                     return false;
                 }
-                // Store user ID and charges
-                currentUserId = data.user.id;
-                charges = data.charges;
-                updateProgressBar();
                 return true;
             } catch (error) {
                 console.error('Validation error:', error);
@@ -313,8 +284,53 @@
             }
         }
 
+        // Add function to fetch charges from server
+        async function fetchCharges() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/get_charges', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        initData: tg.initData,
+                        user: tg.initDataUnsafe.user
+                    }),
+                });
+                const data = await response.json();
+                charges = data.charges;
+                updateProgressBar();
+            } catch (error) {
+                console.error('Error fetching charges:', error);
+            }
+        }
+
+        // Add function to update charges in database
+        async function updateCharges(newCharges) {
+            try {
+                await fetch('http://127.0.0.1:5000/update_charges', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        initData: tg.initData,
+                        user: tg.initDataUnsafe.user,
+                        charges: newCharges
+                    }),
+                });
+            } catch (error) {
+                console.error('Error updating charges:', error);
+            }
+        }
+
         // Call validation when page loads
-        document.addEventListener('DOMContentLoaded', validateTelegramUser);
+        document.addEventListener('DOMContentLoaded', async () => {
+            const valid = await validateTelegramUser();
+            if (valid) {
+                await fetchCharges(); // Fetch charges after successful validation
+            }
+        });
 
         // Modify calculateIncome function to include Telegram data
         function calculateIncome() {
@@ -384,7 +400,7 @@
 
                 charges--;
                 updateProgressBar();
-                updateChargesInDB(charges); // Update charges in database
+                updateCharges(charges); // Update charges in database
                 calculateButton.disabled = false; // Re-enable the button
             })
             .catch(error => {
@@ -397,7 +413,7 @@
         function getFreeBatteries() {
             charges = 3;
             updateProgressBar();
-            updateChargesInDB(charges); // Update charges in database
+            updateCharges(charges); // Update charges in database
             closePanel();
         }
 
