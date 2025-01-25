@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RollerCoin Calculator</title>
-    <!-- <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <script src="ads.js"></script>  -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <script src="ads.js"></script>  -->
 
     <style>
         body {
@@ -239,24 +238,6 @@
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
 
     <script>
-        // Add this at the beginning of your script section
-        document.addEventListener('DOMContentLoaded', function() {
-            const tg = window.Telegram.WebApp;
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const user = tg.initDataUnsafe.user;
-                fetch('/store_user', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: user.id,
-                        username: user.username || null
-                    })
-                }).catch(error => console.error('Error storing user data:', error));
-            }
-        });
-
         let charges = 3;
 
         function updateProgressBar() {
@@ -272,6 +253,11 @@
             }
         }
 
+        // Add Telegram WebApp initialization
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Modify calculateIncome function to include Telegram data
         function calculateIncome() {
             if (charges <= 0) {
                 document.getElementById('noBatteriesPanel').style.display = 'block';
@@ -302,6 +288,13 @@
                 }
             });
 
+            // Add Telegram initData to the request
+            const requestData = {
+                power: power,
+                initData: tg.initData,
+                user: tg.initDataUnsafe.user
+            };
+
             // Update server URL to point to your hosted API
             const serverUrl = 'http://127.0.0.1:5000/calculate';
 
@@ -310,7 +303,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ power: power }),
+                body: JSON.stringify(requestData),
             })
             .then(response => response.json())
             .then(data => {
