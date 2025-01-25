@@ -424,5 +424,61 @@
 
         updateProgressBar();
     </script>
+    <script>
+        // Add request debouncing
+        let calculateTimeout;
+        
+        // Cache DOM elements
+        const elements = {
+            powerInput: document.getElementById('powerInput'),
+            progressBar: document.getElementById('progressBar'),
+            noBatteriesPanel: document.getElementById('noBatteriesPanel'),
+            result: document.getElementById('result'),
+            loading: document.getElementById('loading')
+        };
+
+        // Use RequestAnimationFrame for smooth animations
+        function updateProgressBarAnimation(percentage) {
+            requestAnimationFrame(() => {
+                elements.progressBar.style.width = `${percentage}%`;
+            });
+        }
+
+        function calculateIncome() {
+            // Debounce rapid calculations
+            clearTimeout(calculateTimeout);
+            calculateTimeout = setTimeout(() => {
+                // ...existing calculation code...
+                
+                // Use Promise.all for parallel processing
+                Promise.all([
+                    fetch(serverUrl, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(requestData)
+                    }),
+                    // Any other parallel operations...
+                ])
+                .then(([response]) => response.json())
+                .then(data => {
+                    // Use DocumentFragment for batch DOM updates
+                    const fragment = document.createDocumentFragment();
+                    const rewards = data.message.split('\n');
+                    
+                    rewards.forEach((reward, index) => {
+                        // ...update table cells...
+                    });
+                    
+                    elements.result.querySelector('table').appendChild(fragment);
+                    
+                    // Update UI state
+                    charges--;
+                    updateProgressBarAnimation((charges / 3) * 100);
+                    updateCharges(charges);
+                })
+                .catch(error => console.error('Error:', error));
+            }, 250); // Debounce delay
+        }
+    </script>
 </body>
 </html>
