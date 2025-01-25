@@ -239,6 +239,7 @@
 
     <script>
         let charges = 3;
+        let userId = null;
 
         function updateProgressBar() {
             const progressBar = document.getElementById('progressBar');
@@ -276,11 +277,43 @@
                     document.body.innerHTML = '<h1>Unauthorized Access</h1>';
                     return false;
                 }
+                // Set initial charges from server
+                if (data.charges !== undefined) {
+                    charges = data.charges;
+                    updateProgressBar();
+                }
+                if (data.user && data.user.id) {
+                    userId = data.user.id;
+                }
                 return true;
             } catch (error) {
                 console.error('Validation error:', error);
                 document.body.innerHTML = '<h1>Error validating user</h1>';
                 return false;
+            }
+        }
+
+        // Add function to update charges on server
+        async function updateChargesOnServer() {
+            if (!userId) return;
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/update_charges', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        charges: charges
+                    }),
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    console.error('Failed to update charges on server');
+                }
+            } catch (error) {
+                console.error('Error updating charges:', error);
             }
         }
 
@@ -355,6 +388,7 @@
 
                 charges--;
                 updateProgressBar();
+                updateChargesOnServer(); // Add this line
                 calculateButton.disabled = false; // Re-enable the button
             })
             .catch(error => {
@@ -367,6 +401,7 @@
         function getFreeBatteries() {
             charges = 3;
             updateProgressBar();
+            updateChargesOnServer(); // Add this line
             closePanel();
         }
 
