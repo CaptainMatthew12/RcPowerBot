@@ -257,6 +257,36 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
+        // Add new function for initial validation
+        async function validateTelegramUser() {
+            const serverUrl = 'http://127.0.0.1:5000/validate_user';
+            try {
+                const response = await fetch(serverUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        initData: tg.initData,
+                        user: tg.initDataUnsafe.user
+                    }),
+                });
+                const data = await response.json();
+                if (!data.valid) {
+                    document.body.innerHTML = '<h1>Unauthorized Access</h1>';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Validation error:', error);
+                document.body.innerHTML = '<h1>Error validating user</h1>';
+                return false;
+            }
+        }
+
+        // Call validation when page loads
+        document.addEventListener('DOMContentLoaded', validateTelegramUser);
+
         // Modify calculateIncome function to include Telegram data
         function calculateIncome() {
             if (charges <= 0) {
@@ -290,9 +320,7 @@
 
             // Add Telegram initData to the request
             const requestData = {
-                power: power,
-                initData: tg.initData,
-                user: tg.initDataUnsafe.user
+                power: power
             };
 
             // Update server URL to point to your hosted API
