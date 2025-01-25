@@ -239,7 +239,31 @@
 
     <script>
         let charges = 3;
-        let userId = null;
+        let currentUserId = null;
+
+        // Add this function to update charges in the database
+        async function updateChargesInDB(newCharges) {
+            if (!currentUserId) return;
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/update_charges', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUserId,
+                        charges: newCharges
+                    }),
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    console.error('Failed to update charges');
+                }
+            } catch (error) {
+                console.error('Error updating charges:', error);
+            }
+        }
 
         function updateProgressBar() {
             const progressBar = document.getElementById('progressBar');
@@ -277,16 +301,9 @@
                     document.body.innerHTML = '<h1>Unauthorized Access</h1>';
                     return false;
                 }
-                
-                // Set initial charges and userId from server response
-                if (data.charges !== undefined) {
-                    charges = parseInt(data.charges);
-                }
-                if (data.user && data.user.id) {
-                    userId = data.user.id;
-                }
-                
-                // Update UI immediately after getting charges
+                // Store user ID and charges
+                currentUserId = data.user.id;
+                charges = data.charges;
                 updateProgressBar();
                 return true;
             } catch (error) {
@@ -296,34 +313,8 @@
             }
         }
 
-        // Add function to update charges on server
-        async function updateChargesOnServer() {
-            if (!userId) return;
-            
-            try {
-                const response = await fetch('http://127.0.0.1:5000/update_charges', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        charges: charges
-                    }),
-                });
-                const data = await response.json();
-                if (!data.success) {
-                    console.error('Failed to update charges on server');
-                }
-            } catch (error) {
-                console.error('Error updating charges:', error);
-            }
-        }
-
         // Call validation when page loads
-        document.addEventListener('DOMContentLoaded', async () => {
-            await validateTelegramUser();
-        });
+        document.addEventListener('DOMContentLoaded', validateTelegramUser);
 
         // Modify calculateIncome function to include Telegram data
         function calculateIncome() {
@@ -393,7 +384,7 @@
 
                 charges--;
                 updateProgressBar();
-                updateChargesOnServer(); // Add this line
+                updateChargesInDB(charges); // Update charges in database
                 calculateButton.disabled = false; // Re-enable the button
             })
             .catch(error => {
@@ -406,7 +397,7 @@
         function getFreeBatteries() {
             charges = 3;
             updateProgressBar();
-            updateChargesOnServer(); // Add this line
+            updateChargesInDB(charges); // Update charges in database
             closePanel();
         }
 
