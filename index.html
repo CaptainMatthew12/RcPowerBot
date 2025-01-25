@@ -277,14 +277,17 @@
                     document.body.innerHTML = '<h1>Unauthorized Access</h1>';
                     return false;
                 }
-                // Set initial charges from server
+                
+                // Set initial charges and userId from server response
                 if (data.charges !== undefined) {
-                    charges = data.charges;
-                    updateProgressBar();
+                    charges = parseInt(data.charges);
                 }
                 if (data.user && data.user.id) {
                     userId = data.user.id;
                 }
+                
+                // Update UI immediately after getting charges
+                updateProgressBar();
                 return true;
             } catch (error) {
                 console.error('Validation error:', error);
@@ -318,7 +321,9 @@
         }
 
         // Call validation when page loads
-        document.addEventListener('DOMContentLoaded', validateTelegramUser);
+        document.addEventListener('DOMContentLoaded', async () => {
+            await validateTelegramUser();
+        });
 
         // Modify calculateIncome function to include Telegram data
         function calculateIncome() {
