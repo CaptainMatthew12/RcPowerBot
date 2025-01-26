@@ -190,32 +190,6 @@
         body.no-click .panel {
             pointer-events: auto; /* Enable clicking on the panel */
         }
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
     <style>
         @keyframes dots {
@@ -262,33 +236,47 @@
         </table>
     </div>
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-    </div>
 
     <script>
         // Initialize Telegram WebApp
         const tg = window.Telegram.WebApp;
         
-        // Register user when the page loads
+        // Add proxy configuration
+        const API_BASE_URL = 'http://127.0.0.1:5000';
+        
+        async function fetchWithProxy(url, options = {}) {
+            try {
+                // Add proxy headers if available from Telegram WebApp
+                if (tg.initDataUnsafe?.webAppProxy) {
+                    options.headers = {
+                        ...options.headers,
+                        'X-Telegram-Proxy': 'true',
+                        'X-Telegram-Proxy-Secret': tg.initDataUnsafe.webAppProxy.secret || '',
+                    };
+                }
+                
+                const response = await fetch(url, options);
+                return response;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        // Update the existing fetch calls to use fetchWithProxy
         window.onload = async function() {
             if (tg.initDataUnsafe?.user) {
-                // Register user
                 await registerUser(tg.initDataUnsafe.user);
                 
-                // Load user data
                 try {
-                    const response = await fetch(`http://127.0.0.1:5000/get_user_data/${tg.initDataUnsafe.user.id}`);
+                    const response = await fetchWithProxy(`${API_BASE_URL}/get_user_data/${tg.initDataUnsafe.user.id}`);
                     const data = await response.json();
                     
                     if (data.success && data.data) {
-                        // Update charges from database
                         charges = data.data.remaining_charges;
-                        // Update power input if exists
                         if (data.data.last_power) {
                             document.getElementById('powerInput').value = data.data.last_power;
                         }
-                        // Update progress bar
                         updateProgressBar();
                     }
                 } catch (error) {
@@ -298,7 +286,7 @@
         };
 
         function registerUser(userData) {
-            fetch('http://127.0.0.1:5000/register', {
+            return fetchWithProxy(`${API_BASE_URL}/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -369,7 +357,7 @@
             // Update server URL to point to your hosted API
             const serverUrl = 'http://127.0.0.1:5000/calculate';
 
-            fetch(serverUrl, {
+            fetchWithProxy(serverUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -409,7 +397,7 @@
 
         function getFreeBatteries() {
             if (tg.initDataUnsafe?.user?.id) {
-                fetch(`http://127.0.0.1:5000/update_charges/${tg.initDataUnsafe.user.id}`, {
+                fetchWithProxy(`${API_BASE_URL}/update_charges/${tg.initDataUnsafe.user.id}`, {
                     method: 'POST',
                 })
                 .then(response => response.json())
@@ -434,24 +422,6 @@
         }
 
         updateProgressBar();
-
-        // اضافه کردن کد چک کردن وضعیت لودینگ
-        async function checkLoadingStatus() {
-            try {
-                const response = await fetch('/loading_status');
-                const data = await response.json();
-                if (!data.is_loading) {
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                } else {
-                    setTimeout(checkLoadingStatus, 1000); // چک کردن مجدد بعد از 1 ثانیه
-                }
-            } catch (error) {
-                console.error('Error checking loading status:', error);
-            }
-        }
-
-        // شروع چک کردن وضعیت لودینگ
-        checkLoadingStatus();
     </script>
 </body>
 </html>
