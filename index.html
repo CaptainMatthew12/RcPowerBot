@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RollerCoin Calculator</title>
-    <!-- <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <script src="ads.js"></script>  -->
 
     <style>
@@ -238,6 +238,33 @@
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
 
     <script>
+        // Initialize Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        
+        // Register user when the page loads
+        window.onload = function() {
+            if (tg.initDataUnsafe?.user) {
+                registerUser(tg.initDataUnsafe.user);
+            }
+        };
+
+        function registerUser(userData) {
+            fetch('http://127.0.0.1:5000/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user: userData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Registration successful:', data);
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+            });
+        }
+
         let charges = 3;
 
         function updateProgressBar() {
