@@ -242,9 +242,29 @@
         const tg = window.Telegram.WebApp;
         
         // Register user when the page loads
-        window.onload = function() {
+        window.onload = async function() {
             if (tg.initDataUnsafe?.user) {
-                registerUser(tg.initDataUnsafe.user);
+                // Register user
+                await registerUser(tg.initDataUnsafe.user);
+                
+                // Load user data
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/get_user_data/${tg.initDataUnsafe.user.id}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        // Update charges from database
+                        charges = data.data.remaining_charges;
+                        // Update power input if exists
+                        if (data.data.last_power) {
+                            document.getElementById('powerInput').value = data.data.last_power;
+                        }
+                        // Update progress bar
+                        updateProgressBar();
+                    }
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                }
             }
         };
 
@@ -293,6 +313,13 @@
                 return;
             }
 
+            // Include telegram_id and charges in the request
+            const requestData = {
+                power: power,
+                telegram_id: tg.initDataUnsafe?.user?.id,
+                charges: charges - 1  // Subtract 1 because we're using a charge
+            };
+
             const calculateButton = document.querySelector('button[onclick="calculateIncome()"]');
             calculateButton.disabled = true; // Disable the button
 
@@ -318,7 +345,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ power: power }),
+                body: JSON.stringify(requestData),
             })
             .then(response => response.json())
             .then(data => {
