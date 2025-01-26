@@ -190,6 +190,32 @@
         body.no-click .panel {
             pointer-events: auto; /* Enable clicking on the panel */
         }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     <style>
         @keyframes dots {
@@ -236,6 +262,9 @@
         </table>
     </div>
     <div class="loading" id="loading" style="display: none;"></div> <!-- Hide the loading div -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
 
     <script>
         // Initialize Telegram WebApp
@@ -405,6 +434,24 @@
         }
 
         updateProgressBar();
+
+        // اضافه کردن کد چک کردن وضعیت لودینگ
+        async function checkLoadingStatus() {
+            try {
+                const response = await fetch('/loading_status');
+                const data = await response.json();
+                if (!data.is_loading) {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                } else {
+                    setTimeout(checkLoadingStatus, 1000); // چک کردن مجدد بعد از 1 ثانیه
+                }
+            } catch (error) {
+                console.error('Error checking loading status:', error);
+            }
+        }
+
+        // شروع چک کردن وضعیت لودینگ
+        checkLoadingStatus();
     </script>
 </body>
 </html>
