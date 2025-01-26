@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RollerCoin Calculator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <!-- <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <script src="ads.js"></script>  -->
 
@@ -250,57 +249,40 @@
                 
                 // Load user data
                 try {
-                    getUserData(tg.initDataUnsafe.user.id);
+                    const response = await fetch(`http://127.0.0.1:5000/get_user_data/${tg.initDataUnsafe.user.id}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        // Update charges from database
+                        charges = data.data.remaining_charges;
+                        // Update power input if exists
+                        if (data.data.last_power) {
+                            document.getElementById('powerInput').value = data.data.last_power;
+                        }
+                        // Update progress bar
+                        updateProgressBar();
+                    }
                 } catch (error) {
                     console.error('Error loading user data:', error);
                 }
             }
         };
 
-        const socket = io();
-
-        socket.on('connect', () => {
-            console.log('Connected to server');
-        });
-
-        socket.on('registration_response', (response) => {
-            if (response.error) {
-                console.error(response.error);
-            } else {
-                console.log(response.message);
-            }
-        });
-
-        socket.on('calculation_response', (response) => {
-            if (response.error) {
-                displayError(response.error);
-            } else {
-                displayResults(response.message);
-            }
-        });
-
-        socket.on('user_data_response', (response) => {
-            if (response.success) {
-                updateUIWithUserData(response.data);
-            } else {
-                console.error(response.message || response.error);
-            }
-        });
-
         function registerUser(userData) {
-            socket.emit('register_user', { user: userData });
-        }
-
-        function calculateRewards(power, telegramId, charges) {
-            socket.emit('calculate_rewards', {
-                power: power,
-                telegram_id: telegramId,
-                charges: charges
+            fetch('http://127.0.0.1:5000/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user: userData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Registration successful:', data);
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
             });
-        }
-
-        function getUserData(telegramId) {
-            socket.emit('get_user_data', telegramId);
         }
 
         let charges = 3;
@@ -355,70 +337,67 @@
                 }
             });
 
-            calculateRewards(requestData.power, requestData.telegram_id, requestData.charges);
-        }
+            // Update server URL to point to your hosted API
+            const serverUrl = 'http://127.0.0.1:5000/calculate';
 
-        function displayResults(message) {
-            const rewards = message.split('\n').map(line => line.split(': '));
-            const rows = document.querySelectorAll('#result table tr');
-            rewards.forEach((reward, index) => {
-                const row = rows[index + 1]; // Skip the header row
-                const amountCell = row.cells[2];
-                const usdCell = row.cells[1];
-                amountCell.classList.remove('loading-amount');
-                usdCell.classList.remove('loading-amount');
-                
-                if (reward[0] === 'RLT' || reward[0] === 'RST') {
-                    amountCell.innerHTML = reward[1];
-                    usdCell.innerHTML = '-';
-                } else {
-                    const [cryptoAmount, usdAmount] = reward[1].split('|');
-                    usdCell.innerHTML = `$${usdAmount}`;
-                    amountCell.innerHTML = cryptoAmount;
-                }
-            });
+            fetch(serverUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const rewards = data.message.split('\n').map(line => line.split(': '));
+                rewards.forEach((reward, index) => {
+                    const row = rows[index + 1]; // Skip the header row
+                    const amountCell = row.cells[2];
+                    const usdCell = row.cells[1];
+                    amountCell.classList.remove('loading-amount');
+                    usdCell.classList.remove('loading-amount');
+                    
+                    if (reward[0] === 'RLT' || reward[0] === 'RST') {
+                        amountCell.innerHTML = reward[1];
+                        usdCell.innerHTML = '-';
+                    } else {
+                        const [cryptoAmount, usdAmount] = reward[1].split('|');
+                        usdCell.innerHTML = `$${usdAmount}`;
+                        amountCell.innerHTML = cryptoAmount;
+                    }
+                });
 
-            charges--;
-            updateProgressBar();
-            const calculateButton = document.querySelector('button[onclick="calculateIncome()"]');
-            calculateButton.disabled = false; // Re-enable the button
-        }
-
-        function displayError(error) {
-            console.error('Error:', error);
-            alert('An error occurred while calculating the income.');
-            const calculateButton = document.querySelector('button[onclick="calculateIncome()"]');
-            calculateButton.disabled = false; // Re-enable the button in case of error
-        }
-
-        function updateUIWithUserData(data) {
-            if (data) {
-                // Update charges from database
-                charges = data.remaining_charges;
-                // Update power input if exists
-                if (data.last_power) {
-                    document.getElementById('powerInput').value = data.last_power;
-                }
-                // Update progress bar
+                charges--;
                 updateProgressBar();
-            }
+                calculateButton.disabled = false; // Re-enable the button
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while calculating the income.');
+                calculateButton.disabled = false; // Re-enable the button in case of error
+            });
         }
 
         function getFreeBatteries() {
             if (tg.initDataUnsafe?.user?.id) {
-                socket.emit('update_charges', tg.initDataUnsafe.user.id);
+                fetch(`http://127.0.0.1:5000/update_charges/${tg.initDataUnsafe.user.id}`, {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        charges = 3;
+                        updateProgressBar();
+                        closePanel();
+                    } else {
+                        console.error('Failed to update charges:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating charges:', error);
+                });
             }
         }
-
-        socket.on('update_charges_response', (response) => {
-            if (response.success) {
-                charges = 3;
-                updateProgressBar();
-                closePanel();
-            } else {
-                console.error('Failed to update charges:', response.error);
-            }
-        });
 
         function closePanel() {
             document.getElementById('noBatteriesPanel').style.display = 'none';
