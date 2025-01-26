@@ -379,9 +379,24 @@
         }
 
         function getFreeBatteries() {
-            charges = 3;
-            updateProgressBar();
-            closePanel();
+            if (tg.initDataUnsafe?.user?.id) {
+                fetch(`http://127.0.0.1:5000/update_charges/${tg.initDataUnsafe.user.id}`, {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        charges = 3;
+                        updateProgressBar();
+                        closePanel();
+                    } else {
+                        console.error('Failed to update charges:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating charges:', error);
+                });
+            }
         }
 
         function closePanel() {
