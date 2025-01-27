@@ -216,6 +216,35 @@
         body.no-click .panel {
             pointer-events: auto; /* Enable clicking on the panel */
         }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 500px;
+        }
+        
+        select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ffd700;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        select option {
+            background: #2d2d2d;
+            color: #fff;
+        }
+        
+        .power-input {
+            flex: 1;
+        }
     </style>
     <style>
         @keyframes dots {
@@ -232,7 +261,15 @@
 </head>
 <body>
     <h1>RollerCoin Calculator</h1>
-    <input type="number" id="powerInput" placeholder="Enter your power in PH/s">
+    <div class="input-group">
+        <input type="number" id="powerInput" class="power-input" placeholder="Enter your power">
+        <select id="powerUnit">
+            <option value="PH">PH/s</option>
+            <option value="EH">EH/s</option>
+            <option value="TH">TH/s</option>
+            <option value="GH">GH/s</option>
+        </select>
+    </div>
     <button onclick="calculateIncome()">Calculate</button>
     <div class="progress-bar-container">
         <div class="progress-bar" id="progressBar"></div>
@@ -350,15 +387,35 @@
                 return;
             }
 
-            const power = document.getElementById('powerInput').value;
-            if (!power) {
+            const powerValue = document.getElementById('powerInput').value;
+            const powerUnit = document.getElementById('powerUnit').value;
+            
+            if (!powerValue) {
                 alert('Please enter your power.');
                 return;
             }
 
-            // Include telegram_id and charges in the request
+            // Convert all units to PH/s
+            let convertedPower;
+            switch(powerUnit) {
+                case 'EH':
+                    convertedPower = powerValue * 1000;
+                    break;
+                case 'PH':
+                    convertedPower = powerValue;
+                    break;
+                case 'TH':
+                    convertedPower = powerValue / 1000;
+                    break;
+                case 'GH':
+                    convertedPower = powerValue / 1000000;
+                    break;
+                default:
+                    convertedPower = powerValue;
+            }
+
             const requestData = {
-                power: power,
+                power: convertedPower,
                 telegram_id: tg.initDataUnsafe?.user?.id,
                 charges: charges - 1  // Subtract 1 because we're using a charge
             };
