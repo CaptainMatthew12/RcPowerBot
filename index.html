@@ -245,51 +245,22 @@
         .power-input {
             flex: 1;
         }
-        .income-dropdown {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
-        .income-button {
-            background: linear-gradient(45deg, #ffd700, #ffb700);
-            color: #000;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .income-content {
-            display: none;
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 10px;
+        .period-toggle {
+            background: none;
             border: 2px solid #ffd700;
-        }
-
-        .income-content a {
-            color: #fff;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
+            color: #ffd700;
+            font-size: 1.2em;
+            font-weight: bold;
             cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
         }
 
-        .income-content a:hover {
-            background: rgba(255, 215, 0, 0.2);
-        }
-
-        .income-dropdown:hover .income-content {
-            display: block;
-        }
-
-        .income-dropdown:hover .income-button {
-            background: linear-gradient(45deg, #ffb700, #ffd700);
+        .period-toggle:hover {
+            background: rgba(255, 215, 0, 0.1);
+            transform: translateY(-2px);
         }
     </style>
     <style>
@@ -328,14 +299,7 @@
         </div>
     </div>
     <div class="result" id="result">
-        <div class="income-dropdown">
-            <button class="income-button">Daily Income ▼</button>
-            <div class="income-content">
-                <a onclick="updateIncomeTable(1)">Daily Income</a>
-                <a onclick="updateIncomeTable(7)">Weekly Income</a>
-                <a onclick="updateIncomeTable(30)">Monthly Income</a>
-            </div>
-        </div>
+        <button class="period-toggle" id="periodToggle">Daily Income</button>
         <table>
             <tr><th>Currency</th><th>USD</th><th>Crypto</th></tr>
             <tr><td><img src="Coin_Icon/rlt.svg" width="16" height="16" alt="RLT"> RLT</td><td>-</td><td>0</td></tr>
@@ -503,6 +467,8 @@
             .then(response => response.json())
             .then(data => {
                 const rewards = data.message.split('\n').map(line => line.split(': '));
+                baseValues = []; // Reset base values
+                
                 rewards.forEach((reward, index) => {
                     const row = rows[index + 1]; // Skip the header row
                     const amountCell = row.cells[2];
@@ -513,13 +479,16 @@
                     if (reward[0] === 'RLT' || reward[0] === 'RST') {
                         amountCell.innerHTML = reward[1];
                         usdCell.innerHTML = '-';
+                        baseValues.push({ crypto: reward[1], usd: '-' });
                     } else {
                         const [cryptoAmount, usdAmount] = reward[1].split('|');
                         usdCell.innerHTML = `$${usdAmount}`;
                         amountCell.innerHTML = cryptoAmount;
+                        baseValues.push({ crypto: cryptoAmount, usd: usdAmount });
                     }
                 });
 
+                updateDisplayedValues(); // Apply current period multiplier
                 charges--;
                 updateProgressBar();
                 calculateButton.disabled = false; // Re-enable the button
@@ -557,29 +526,52 @@
             document.body.classList.remove('no-scroll', 'no-click'); // Re-enable scrolling and clicking
         }
 
-        function updateIncomeTable(multiplier) {
+        updateProgressBar();
+
+        // Add these variables at the top of your script
+        let currentPeriod = 'daily';
+        let baseValues = [];
+
+        // Add this function to handle period toggling
+        document.getElementById('periodToggle').addEventListener('click', function() {
+            switch(currentPeriod) {
+                case 'daily':
+                    currentPeriod = 'weekly';
+                    this.textContent = 'Weekly Income';
+                    break;
+                case 'weekly':
+                    currentPeriod = 'monthly';
+                    this.textContent = 'Monthly Income';
+                    break;
+                case 'monthly':
+                    currentPeriod = 'daily';
+                    this.textContent = 'Daily Income';
+                    break;
+            }
+            updateDisplayedValues();
+        });
+
+        // Add this function to update displayed values
+        function updateDisplayedValues() {
+            const multiplier = currentPeriod === 'weekly' ? 7 : currentPeriod === 'monthly' ? 30 : 1;
             const rows = document.querySelectorAll('#result table tr');
-            rows.forEach((row, index) => {
-                if (index > 0) { // Skip header row
+            
+            baseValues.forEach((value, index) => {
+                if (index < rows.length - 1) { // Skip header row
+                    const row = rows[index + 1];
                     const usdCell = row.cells[1];
                     const cryptoCell = row.cells[2];
                     
-                    if (usdCell.innerHTML !== '-') {
-                        const usdValue = parseFloat(usdCell.innerHTML.replace('$', ''));
-                        usdCell.innerHTML = `$${(usdValue * multiplier).toFixed(2)}`;
-                    }
-                    
-                    if (!cryptoCell.classList.contains('loading-amount')) {
-                        const cryptoValue = parseFloat(cryptoCell.innerHTML);
-                        if (!isNaN(cryptoValue)) {
-                            cryptoCell.innerHTML = (cryptoValue * multiplier).toFixed(8);
-                        }
+                    if (value.usd !== '-') {
+                        const baseUsd = parseFloat(value.usd);
+                        const baseCrypto = parseFloat(value.crypto);
+                        
+                        usdCell.innerHTML = `$${(baseUsd * multiplier).toFixed(8)}`;
+                        cryptoCell.innerHTML = (baseCrypto * multiplier).toFixed(8);
                     }
                 }
             });
         }
-
-        updateProgressBar();
     </script>
 </body>
 </html>
